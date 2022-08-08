@@ -1,15 +1,20 @@
-class Article {
-    id: string;
-    title: string;
-    body: string;
-    author: string;
+import mongoose, { Document, Schema } from "mongoose";
 
-    constructor(id: string, title: string, body: string, author: string) {
-        this.id = id;
-        this.title = title;
-        this.body = body;
-        this.author = author;
-    }
+export interface IArticle extends Document {
+  title: string;
+  body: string;
+  author: string;
 }
 
-export default Article;
+const articleSchema: Schema = new Schema<IArticle>(
+  {
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    author: { type: String, required: true },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.model("Article", articleSchema);

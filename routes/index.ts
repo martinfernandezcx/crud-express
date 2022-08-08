@@ -1,10 +1,10 @@
-import {Application, Router} from 'express';
-import api from './api'
+import { Application, Router } from "express";
+import api from "./api";
 
 class Routes {
-    static configure(app: Application) {
-        app.use('/api', api(Router()));
-    }
+  static configure(app: Application) {
+    app.use("/api", api(Router()));
+  }
 }
 
 module.exports = Routes;
