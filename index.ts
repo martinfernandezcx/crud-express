@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import errorHandler from "./middleware/errorHandler";
 
 const express = require("express");
 const logger = require("morgan");
@@ -14,7 +15,7 @@ app.use(bodyParser.json());
 Routes.configure(app);
 
 async function start() {
-  await mongoose.connect("mongodb://localhost:27017/nodeTraining" );
+  await mongoose.connect("mongodb://localhost:27017/nodeTraining");
 
   const db = mongoose.connection;
   db.on("error", console.error.bind(console, "connection error: "));
@@ -26,5 +27,7 @@ async function start() {
     console.log(`Express server listening on port ${PORT}`);
   });
 }
+
+app.use(errorHandler);
 
 start().catch((err) => console.log(err));

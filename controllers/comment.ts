@@ -5,8 +5,27 @@ import mongoose from "mongoose";
 import Comments from "../routes/api/comments";
 
 class CommentController {
-  static fetch(req: Request, res: Response) {
-    Comment.find({})
+  static async fetch(req: Request, res: Response) {
+    res.status(200).send(await Comment.find({}).exec());
+
+    // Comment.find({})
+    //   .exec()
+    //   .then((results) => {
+    //     return res.status(200).json({
+    //       comments: results,
+    //       length: results.length,
+    //     });
+    //   })
+    //   .catch((err) => {
+    //     return res.status(500).json({
+    //       message: err.messag,
+    //       err,
+    //     });
+    //   });
+  }
+
+  static fetchByArticle(req: Request, res: Response) {
+    Comment.find({ article: req.params.articleId })
       .exec()
       .then((results) => {
         return res.status(200).json({
@@ -39,21 +58,12 @@ class CommentController {
       });
   }
 
-  static create(req: Request, res: Response) {
-    let articleIn;
-    Article.findOne({ _id: req.body.comment.articleId })
-      .exec()
-      .then((results) => {
-        articleIn = results as IArticle;
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          message: err.messag,
-          err,
-        });
-      });
+  static async create(req: Request, res: Response) {
+    const article = await Article.findOne({ _id: req.body.comment.articleId })
+      .lean()
+      .exec();
 
-    if (!articleIn) {
+    if (!article) {
       res.status(400).send("Invalid Article Provided");
       return;
     }
@@ -61,28 +71,18 @@ class CommentController {
       res.status(400).send("Body field is mandatory");
       return;
     }
+
     const newComment = new Comment({
       _id: new mongoose.Types.ObjectId(),
       body: req.body.comment.body,
+      articleId: article._id,
     });
 
-    return newComment
-      .save()
-      .then((result) => {
-        return res.status(201).json({
-          comment: result,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          message: err.messag,
-          err,
-        });
-      });
+    res.status(201).send(await newComment.save());
   }
 
   static update(req: Request, res: Response) {
-    Comment.findByIdAndUpdate(req.body.comment.articleId, req.body.comment)
+    Comment.findByIdAndUpdate(req.params.id, req.body.comment)
       .exec()
       .then((results) => {
         return res.status(201).json({
@@ -98,12 +98,17 @@ class CommentController {
   }
 
   static remove(req: Request, res: Response) {
-    // const comment = comments.find((c) => c.id === req.params.id);
-    // if (!comment) {
-    //   return res.status(404).send("Comment not found");
-    // }
-    // comments.splice(comments.indexOf(comment), 1);
-    // res.end();
+    Comment.remove({ _id: req.params.id })
+      .exec()
+      .then((results) => {
+        return res.status(202).json({});
+      })
+      .catch((err) => {
+        return res.status(500).json({
+          message: err.messag,
+          err,
+        });
+      });
   }
 }
 
