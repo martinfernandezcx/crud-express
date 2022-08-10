@@ -1,45 +1,37 @@
 import { Request, Response } from "express";
 import { ArticleController } from "./index";
 import { IArticle } from "../models/article";
+import { connectDb } from "../services/articleService";
+import mongoose from "mongoose";
 
 describe("Fetch Articles request", () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+  let mongoClient: typeof mongoose;
 
-  let responseObject: IArticle[];
-
-  beforeEach(() => {
-    mockRequest = {};
-    mockResponse = {
-      statusCode: 200,
-      send: jest.fn().mockImplementation((result) => {
-        responseObject = result;
-      }),
-    };
+  beforeAll(async () => {
+    mongoClient = await connectDb("mongodb://localhost:27017/nodeTraining");
   });
 
-  test("200 - fetch Articles", () => {
-    const expectedStatusCode = 200;
-    const expectedResponse = {
-      articles: [
-        {
-          _id: "62f156cce22ac9fa9f869e98",
-          title: "hello world",
-          body: "In this episode w will insert an article",
-          author: "me",
-        },
-        {
-          _id: "62f2a498ef38d8e177cb648d",
-          title: "hello world",
-          body: "In this episode w will insert another article",
-          author: "me",
-        },
-      ],
+  afterAll(async () => {
+    await mongoClient.connection.close();
+  });
+
+  test("200 - fetch Articles", async () => {
+    const request = {};
+    const response: Partial<Response> = {
+      statusCode: 200,
+      send: jest.fn().mockImplementation((result) => {
+        expect(result).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              title: "hello world",
+            }),
+          ])
+        );
+      }),
     };
 
-    ArticleController.fetch(mockRequest as Request, mockResponse as Response);
-
-    expect(mockResponse.statusCode).toBe(expectedStatusCode);
-    expect(responseObject).toEqual(expectedResponse);
+    const expectedStatusCode = 200;
+    await ArticleController.fetch(request as Request, response as Response);
+    expect(response.statusCode).toBe(expectedStatusCode);
   });
 });

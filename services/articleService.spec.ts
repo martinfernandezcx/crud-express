@@ -1,45 +1,59 @@
-import { Request, Response } from "express";
-import { ArticleController } from "./index";
-import { IArticle } from "../models/article";
+import Article, { IArticle } from "../models/article";
+import ArticleService, { connectDb } from "./articleService";
+import mongoose from "mongoose";
 
 describe("Fetch Articles request", () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+  let mongoClient: typeof mongoose;
 
-  let responseObject: IArticle[];
-
-  beforeEach(() => {
-    mockRequest = {};
-    mockResponse = {
-      statusCode: 200,
-      send: jest.fn().mockImplementation((result) => {
-        responseObject = result;
-      }),
-    };
+  beforeAll(async () => {
+    mongoClient = await connectDb("mongodb://localhost:27017/nodeTraining");
   });
 
-  test("200 - fetch Articles", () => {
-    const expectedStatusCode = 200;
-    const expectedResponse = {
-      articles: [
-        {
-          _id: "62f156cce22ac9fa9f869e98",
-          title: "hello world",
-          body: "In this episode w will insert an article",
-          author: "me",
-        },
-        {
-          _id: "62f2a498ef38d8e177cb648d",
-          title: "hello world",
-          body: "In this episode w will insert another article",
-          author: "me",
-        },
-      ],
-    };
+  afterAll(async () => {
+    await mongoClient.connection.close();
+  });
 
-    ArticleController.fetch(mockRequest as Request, mockResponse as Response);
+  // afterEach(async () => {
+  //   await mongoClient.connection.db.dropDatabase();
+  // });
 
-    expect(mockResponse.statusCode).toBe(expectedStatusCode);
-    expect(responseObject).toEqual(expectedResponse);
+  test("it should list all articles", async () => {
+    const expectedResponse = [
+      {
+        _id: "62f4020a623154b57a087754",
+        title: "hello world",
+        body: "In this episode w will insert another article",
+        author: "me",
+      },
+      {
+        _id: "62f4020b623154b57a087757",
+        title: "hello world",
+        body: "In this episode w will insert another article",
+        author: "me",
+      },
+      {
+        _id: "62f4020c623154b57a08775a",
+        title: "hello world",
+        body: "In this episode w will insert another article",
+        author: "me",
+      },
+      {
+        _id: "62f4020d623154b57a08775d",
+        title: "hello world",
+        body: "In this episode w will insert another article",
+        author: "me",
+      },
+    ];
+
+    let response = await ArticleService.fetch();
+    expect(response.length).toEqual(expectedResponse.length);
+
+    expect(response).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: "hello world",
+        }),
+      ])
+    );
   });
 });

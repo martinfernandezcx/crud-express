@@ -1,43 +1,19 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 import Article from "../models/article";
+import Comment from "../models/comment";
+import ArticleService from "../services/articleService";
 
 class ArticleController {
-  static fetch(req: Request, res: Response) {
-    Article.find({})
-      .exec()
-      .then((results) => {
-        return res.status(200).json({
-          articles: results,
-          length: results.length,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          message: err.messag,
-          err,
-        });
-      });
+  static async fetch(req: Request, res: Response) {
+    res.send(await ArticleService.fetch());
   }
 
-  static find(req: Request, res: Response) {
-    Article.find({ _id: req.params.id })
-      .exec()
-      .then((results) => {
-        return res.status(200).json({
-          articles: results,
-          length: results.length,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          message: err.messag,
-          err,
-        });
-      });
+  static async find(req: Request, res: Response) {
+    res.send(await Article.find({ _id: req.params.id }).exec());
   }
 
-  static create(req: Request, res: Response) {
+  static async create(req: Request, res: Response) {
     let article = req.body.article;
     const newArticle = new Article({
       _id: new mongoose.Types.ObjectId(),
@@ -46,41 +22,17 @@ class ArticleController {
       author: article.author,
     });
 
-    return newArticle
-      .save()
-      .then((result) => {
-        return res.status(201).json({
-          article: result,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({
-          message: err.messag,
-          err,
-        });
-      });
+    res.status(201).send(await newArticle.save());
   }
 
-  static update(req: Request, res: Response) {
-    // const article = articles.find((article) => article.id === req.params.id);
-    // if (!article) {
-    //   return res.status(404).send("Article not found");
-    // }
-    // const updatedArticle = {
-    //   ...article,
-    //   ...(req.body.article as Partial<Article>),
-    // };
-    // articles[articles.indexOf(article)] = updatedArticle;
-    // res.send(updatedArticle);
+  static async update(req: Request, res: Response) {
+    res.send(await Article.findByIdAndUpdate(req.params.id, req.body.article));
   }
 
-  static remove(req: Request, res: Response) {
-    // const article = articles.find((article) => article.id === req.params.id);
-    // if (!article) {
-    //   return res.status(404).send("Article not found");
-    // }
-    // articles.splice(articles.indexOf(article), 1);
-    // res.end();
+  static async remove(req: Request, res: Response, next: NextFunction) {
+    await Comment.deleteMany({ articleId: req.params.id });
+
+    res.send(await Article.deleteOne({ _id: req.params.id }));
   }
 }
 

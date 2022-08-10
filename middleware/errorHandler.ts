@@ -1,6 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 import { CustomError } from "../models/custom-error";
-
 
 /**
  * Custom error handler to standardize error objects returned to
@@ -21,11 +20,14 @@ function handleError(
 
   if (!(err instanceof CustomError)) {
     customError = new CustomError(
-      'Oh no, this is embarrasing. We are having troubles my friend'
+      "Oh no, this is embarrassing. We are having troubles my friend"
     );
+    customError.additionalInfo = {
+      details: err.message,
+    };
   }
 
   res.status((customError as CustomError).status).send(customError);
-};
+}
 
 export default handleError;
